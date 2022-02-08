@@ -28,14 +28,14 @@ PCA Tierney et al 2013 African hydroclimate - Time uncertain proxy paleoclimate 
 
 ## Age models
 BChron: Bayesian method
-- assumes linear acculation rates
+- assumes linear accumulation rates
 - but able to simulate sharp changes or hiatuses
 - designed for 14C-dated sediments but more widely applicable
 Bacon: another Bayesian
-  - gamma prior on the acculation rate informs the age model
+  - gamma prior on the accumulation rate informs the age model
   - tries to fit relatively smooth lines
   - useful for sedimentary records, esp for 14C-dated ones
-Oxcal: probablistic models (also bayesian)
+Oxcal: probabilistic models (also bayesian)
 Banded age model: layer counting 
   - two main errors (double count, or not counted)
   - errors accumulate as you go back through the core

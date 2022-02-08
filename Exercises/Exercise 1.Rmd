@@ -41,7 +41,7 @@ eur <- readLipd("https://lipdverse.org/geoChronR-examples/euro/Euro2k.zip")
 ```
 
 ```{r}
-mapLipd(eur,projection = "mollweide",global = TRUE)
+mapLipd(eur,projection = "mercator",global = TRUE, size = 3)
 ```
 
 
