@@ -8,26 +8,307 @@ Meet back in 3 hours (3pm PST, 7am AWST)
 # Age modelling 
 
 http://linked.earth/time-uncertain-data-analysis-in-R/agemodelling.html
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+
+```{r}
+library(lipdR)
+library(geoChronR)
+library(ggplot2)
+library(magrittr)
+
+tana <- readLipd("https://lipdverse.org/Temp12k/1_0_2/TanaLake.Loomis.2015.lpd")
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+```{r}
+tana <- runBacon(tana,
+                 model.num = 1,
+                 lab.id.var = 'LabID', 
+                 age.14c.var = 'age14C',
+                 age.14c.uncertainty.var = 'age14CUnc', 
+                 age.var = 'age', 
+                 age.uncertainty.var = '1SD', 
+                 depth.var = 'depth', 
+                 reservoir.age.14c.var = NULL, 
+                 reservoir.age.14c.uncertainty.var = NULL, 
+                 rejected.ages.var = NULL,
+                 accept.suggestions = TRUE)
+```
+I can't get truncate.dist working
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+plotChronEns(tana,
+             probs = c(0.11,0.25, 0.75, 0.89),
+             color.low = "grey80",color.high = "navy",
+             dist.type = 'down', dist.color = '#385338', dist.alp	=.5,
+             truncate.dist = 1e-3) +
+  ggtitle("Tana Lake - default Bacon model")
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+tana <- runBchron(tana,
+                 iter = 10000,
+                 model.num = 2,
+                 lab.id.var = 'LabID', 
+                 age.14c.var = 'age14C',
+                 age.14c.uncertainty.var = 'age14CUnc', 
+                 age.var = 'age', 
+                 age.uncertainty.var = '1SD', 
+                 depth.var = 'depth', 
+                 reservoir.age.14c.var = NULL, 
+                 reservoir.age.14c.uncertainty.var = NULL, 
+                 rejected.ages.var = NULL)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+plotChronEns(tana,model.num = 2,truncate.dist = .0001) + ggtitle("Tana Lake - default Bchron model")
+```
+
+```{r}
+tana <- runOxcal(tana,model.num = 3,
+                 lab.id.var = 'LabID', 
+                 age.14c.var = 'age14C',
+                 age.14c.uncertainty.var = 'age14CUnc', 
+                 age.var = 'age', 
+                 age.uncertainty.var = '1SD', 
+                 depth.var = 'depth', 
+                 reservoir.age.14c.var = NULL, 
+                 reservoir.age.14c.uncertainty.var = NULL, 
+                 rejected.ages.var = NULL,
+                 events.per.unit.length = .05,
+                 depth.interval = 20)
+```
+
+```{r}
+plotChronEns(tana,model.num = 3,truncate.dist = .0001) + ggtitle("Tana Lake - Oxcal model")
+```
+```{r}
+ensBacon <- selectData(tana,
+                       var.name = "ageEnsemble",
+                       paleo.or.chron = "chronData",
+                       model.num = 1,
+                       table.type = "ensemble")
+
+depthBacon <- selectData(tana,
+                       var.name = "depth",
+                       paleo.or.chron = "chronData",
+                       model.num = 1,
+                       table.type = "ensemble")
+
+ensBchron <- selectData(tana,
+                       var.name = "ageEnsemble",
+                       paleo.or.chron = "chronData",
+                       model.num = 2,
+                       table.type = "ensemble")
+
+depthBchron <- selectData(tana,
+                       var.name = "depth",
+                       paleo.or.chron = "chronData",
+                       model.num = 2,
+                       table.type = "ensemble")
+
+ensOxcal <- selectData(tana,
+                       var.name = "ageEnsemble",
+                       paleo.or.chron = "chronData",
+                       model.num = 3,
+                       table.type = "ensemble")
+
+depthOxcal <- selectData(tana,
+                       var.name = "depth",
+                       paleo.or.chron = "chronData",
+                       model.num = 3,
+                       table.type = "ensemble")
+```
+
+```{r}
+plotTimeseriesEnsRibbons(X = ensBacon,Y = depthBacon) %>% 
+  plotTimeseriesEnsRibbons(X = ensBchron,Y = depthBchron,
+                           alp = .7,
+                           color.high = "DarkGreen",
+                           color.line = "Green") %>% 
+plotTimeseriesEnsRibbons(X = ensOxcal,Y = depthOxcal,
+                         alp = .7,
+                         color.high = "DarkBlue",
+                         color.line = "Blue") %>% 
+  plotModelDistributions(tana,add.to.plot = .) + #here we use the ggplot +
+  scale_y_reverse()
+```
+The Oxcal model is more stepped and follows the data more closely (including outliers). The bacon and bchron models smooth it and assume more constant accumulation. 
+
+Changing the thickness parameter makes it more flexible.
+
+```{r}
+tana <- createMultiModelEnsemble(tana,
+                                 models.to.combine = 1:3,
+                                 depth.interval =10,
+                                 n.ens = 1000)
+```
+
+
+```{r}
+plotChronEns(tana,model.num = 4) %>% plotModelDistributions(tana,add.to.plot=.)
+```
+### 4.3.3
+```{r}
+paleo <- extractTs(tana) %>% ts2tibble()
+paleo$paleoData_variableName
+```
+
+```{r}
+tana <- mapAgeEnsembleToPaleoData(tana,
+                                  age.var = "ageEnsemble",
+                                  model.num = 4,
+                                  paleo.depth.var = "Composite_depth", 
+                                  paleo.meas.table.num = 1)
+```
+
+### 4.3.4
+```{r}
+paleo <- extractTs(tana) %>% ts2tibble()
+
+paleo$paleoData_variableName
+```
+
+```{r}
+tana.ae <- selectData(tana,var.name = "ageEnsemble",meas.table.num = 1)
+tana.temp <- selectData(tana,var.name = "temperature",meas.table.num = 1)
+```
+
+```{r}
+tana.ts.plot <-  plotTimeseriesEnsLines(
+  X = tana.ae,Y = tana.temp,
+  alp = 0.1,
+  n.ens.plot = 200,
+  color = "Blues") + xlim(c(10000,0))
+print(tana.ts.plot)
+```
+
+```{r}
+tana.ribbon.plot <- plotTimeseriesEnsRibbons(
+  X = tana.ae,Y = tana.temp,
+  probs = c(0.11, 0.5, 0.75, 0.89),
+  color.high = 'navy', n.bins = 300, 
+  limit.outliers.x = 0.001)
+print(tana.ribbon.plot)
+```
+
+```{r}
+plotTimeseriesEnsLines(
+  X = tana.ae,Y = tana.temp,
+  alp = .4,
+  n.ens.plot = 5,
+  color = "Blues", add.to.plot = tana.ribbon.plot) + xlim(c(10000,0))
+```
+
+## 4.4. Banded age modelling
+
+```{r}
+tana <- runBam(tana,
+               paleo.meas.table.num = 1,
+               n.ens = 1000,
+               model.num = 5,
+               make.new = TRUE,
+               ens.table.number = 1,
+               model = list(name = "poisson",
+                            param = 0.05, 
+                            resize = 0, 
+                            ns = 1000))
+```
+
+```{r}
+tana.ye <- selectData(tana,var.name = "yearEnsemble",meas.table.num = 1)
+tana.ae.bam <- convertAD2BP(tana.ye)
+
+tana.ribbon.plot.bam <- plotTimeseriesEnsRibbons(X = tana.ae.bam,Y = tana.temp)
+
+#we can compare this to the original age model supplied by the paper (which used the Heegaard et al., 2005 model, so a whole other approach)
+
+tana.orig.age <- selectData(tana,var.name = "age",meas.table.num = 1)
+
+tana.ribbon.plot.bam <- tana.ribbon.plot.bam +
+  geom_line(aes(x = tana.orig.age$values, y = tana.temp$values),color = "red")
+
+tana.ribbon.plot.bam
+```
+
+```{r}
+library(egg)
+ggarrange(plots = list(tana.ribbon.plot +
+                         xlim(c(15000,0)) + ggtitle("Temperature on Multimodel age model"),
+                            tana.ribbon.plot.bam +
+                         xlim(c(15000,0)) + ggtitle("Temperature on BAM")),nrow = 2)
+```
+## 4.5 Chapter Project
+
+```{r}
+tana <- mapAgeEnsembleToPaleoData(tana,
+                                  age.var = "ageensemble",
+                                  model.num = 1,
+                                  paleo.depth.var = "ddwax corrected", 
+                                  paleo.meas.table.num = 3)
+tana.ye <- selectData(tana,var.name = "ageensemble",meas.table.num = 3)
+tana.ae.bac <- convertAD2BP(tana.ye)
+
+tana.lw.bac <- selectData(tana,var.name = "dDwax Corrected",meas.table.num = 3)
+
+tana.ribbon.plot.bac <- plotTimeseriesEnsRibbons(X = tana.ae.bac,Y = tana.lw.bac)+
+  xlim(c(10000,0)) + ggtitle("Bacon")
+tana.ribbon.plot.bac
+```
+```{r}
+tana <- mapAgeEnsembleToPaleoData(tana,
+                                  age.var = "ageensemble",
+                                  model.num = 2,
+                                  paleo.depth.var = "ddwax corrected", 
+                                  paleo.meas.table.num = 3)
+tana.ye <- selectData(tana,var.name = "ageensemble",meas.table.num = 3)
+tana.ae.bcr <- convertAD2BP(tana.ye)
+
+tana.lw.bcr <- selectData(tana,var.name = "dDwax Corrected",meas.table.num = 3)
+
+tana.ribbon.plot.bcr <- plotTimeseriesEnsRibbons(X = tana.ae.bcr,Y = tana.lw.bcr) +
+  xlim(c(10000,0)) + ggtitle("BChron")
+tana.ribbon.plot.bcr
+```
+
+```{r}
+tana <- mapAgeEnsembleToPaleoData(tana,
+                                  age.var = "ageensemble",
+                                  model.num = 3,
+                                  paleo.depth.var = "ddwax corrected", 
+                                  paleo.meas.table.num = 3)
+tana.ye <- selectData(tana,var.name = "ageensemble",meas.table.num = 3)
+tana.ae.ox <- convertAD2BP(tana.ye)
+
+tana.lw.ox <- selectData(tana,var.name = "dDwax Corrected",meas.table.num = 3)
+
+tana.ribbon.plot.ox <- plotTimeseriesEnsRibbons(X = tana.ae.ox,Y = tana.lw.ox) +
+  xlim(c(-10000,0)) + ggtitle('OxCal')
+tana.ribbon.plot.ox
+```
+```{r}
+tana <- mapAgeEnsembleToPaleoData(tana,age.var = "ageensemble",
+                                  model.num = 5,
+                                  paleo.depth.var = "ddwax corrected", 
+                                  paleo.meas.table.num = 3)
+tana.ye <- selectData(tana,var.name = "ageensemble",meas.table.num = 3)
+tana.ae.bam <- convertAD2BP(tana.ye)
+
+tana.lw.bam <- selectData(tana,var.name = "dDwax Corrected",meas.table.num = 3)
+
+tana.ribbon.plot.bam <- plotTimeseriesEnsRibbons(X = tana.ae.bam,Y = tana.lw.bam) +
+  xlim(c(10000,0)) + ggtitle('BAM')
+tana.ribbon.plot.bam
+```
+
+```{r fig.height=12, fig.width=6}
+library(patchwork)
+
+tana.ribbon.plot.bac/
+tana.ribbon.plot.bcr/
+tana.ribbon.plot.ox/
+tana.ribbon.plot.bam +
+  plot_layout(ncol=1)
+
+ggsave('exercise2.png', width = 6, height = 12)
+```
+
