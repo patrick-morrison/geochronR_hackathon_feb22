@@ -1,0 +1,101 @@
+---
+title: "Exercise 1"
+output: html_document
+---
+
+http://linked.earth/time-uncertain-data-analysis-in-R/data.html
+Meet back in an hour (11:45PST/3:45AWST)
+
+# 3.1 Loading a LiPD file
+```{r}
+library(lipdR)
+library(geoChronR)
+```
+```{r}
+L <- readLipd("https://lipdverse.org/Temp12k/current_version/GEOFAR_KF16_MgCa.Repschlager.2016.lpd")
+```
+
+3.1a+b load it from URL and from computer
+```{r}
+L <- readLipd("https://lipdverse.org/Temp12k/current_version/MD01_2378.Xu.2008.lpd")
+#from computer: L <- readLipd()
+```
+
+## Plot
+```{r}
+summary_plot <- plotSummary(L,
+                            paleo.data.var = "temperature",
+                            chron.age.var = "age",
+                            chron.depth.var = "depth_bottom",
+                            chron.age.14c.var = NULL)
+```
+```{r}
+temp <- selectData(L,paleo.or.chron = "paleoData", var.name = 'temperature',
+                   table.type = "meas",meas.table.num = 1)
+c14 <- selectData(L,paleo.or.chron = "chronData", var.name = 'c14_date')
+```
+## 3.2
+
+```{r}
+eur <- readLipd("https://lipdverse.org/geoChronR-examples/euro/Euro2k.zip")
+```
+
+```{r}
+mapLipd(eur,projection = "mollweide",global = TRUE)
+```
+
+
+```{r}
+TS <- extractTs(eur)
+summ <- plotSummaryTs(TS,age.var = "year",
+                      sort.var = "geo_pages2kRegion")
+```
+
+
+### 3.2.1
+```{r}
+library(dplyr)
+ts.tib <- ts2tibble(TS)
+filtered.tib <- ts.tib %>% 
+   filter(between(geo_latitude,30,80) & between(geo_longitude,-30,60)) %>%
+   filter(archiveType == "tree") %>% 
+   filter(paleoData_useInGlobalTemperatureAnalysis == TRUE)
+
+nTS <- as.lipdTs(filtered.tib) #convert it back (for now)
+plotSummaryTs(nTS,age.var = "year",f = .1)
+```
+
+Invert.var points a variable which can flip the timeseries:
+in this case invert.var = 'interpretation1_interpDirection'?
+
+```{r fig.height=8, fig.width=10}
+longTib <- as.lipdTsTibbleLong(filtered.tib) %>% 
+   dplyr::filter(between(year,1000,2000))
+
+#devtools::install_github("ropenscilabs/ochRe")
+library(ochRe)
+ramp <- function(nColors){
+  pal <- colorRampPalette(ochre_palettes[["lorikeet"]])
+  pal(nColors)
+  }
+
+plotTimeseriesStack(longTib,color.var = "paleoData_proxy",
+                    line.size = 0.2,
+                    color.ramp = ramp,
+                    invert.var = 'interpretation1_interpDirection')
+```
+
+```{r fig.height=5, fig.width=10}
+ramp2 <- function(nColors){
+  pal <- colorRampPalette(ochre_palettes[["namatjira_div"]])
+  pal(nColors)
+}
+
+longTib %>% 
+  filter(paleoData_proxy =='MXD') %>% 
+  plotTimeseriesStack(color.var = "geo_pages2kRegion",
+                    line.size = 0.2,
+                    color.ramp = ramp2,
+                    invert.var = 'interpretation1_interpDirection')
+```
+

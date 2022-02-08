@@ -1,0 +1,51 @@
+---
+title: "2 Ensembles"
+output: html_document
+---
+
+## What is an age model?
+
+Age models are not uniquely defined 
+(An age model is a generally nonlinear function f relating depth to age)
+Can have a lot of options
+
+A model is not software! The model is a mathematical representation of how things work (e.g. how a layered medium accumulates.)
+
+## Ensembles 
+aka Monte Carlo methods
+Not simply a function (non analytical)
+When paths are of interest
+J. Salavon, "100 special moments" - none of the ensemble members look like the median!
+Practically - radiocarbon datasets around things like the younger dryas can be bimodal (doesn't go through the median)
+
+## Power in ensembles
+You can do correlations, spectral analysis or PCA with each member, or an ensemble
+Allows you to quantify the dependence on age uncertainties
+In GeoChronR the data is stored in an ensemble table, and then you can compute or plot
+Age uncertainties make you lose correlations but rarely gain, but you can see the full distrbution using an ensemble. 
+
+PCA Tierney et al 2013 African hydroclimate - Time uncertain proxy paleoclimate records 
+
+## Age models
+BChron: Bayesian method
+- assumes linear acculation rates
+- but able to simulate sharp changes or hiatuses
+- designed for 14C-dated sediments but more widely applicable
+Bacon: another Bayesian
+  - gamma prior on the acculation rate informs the age model
+  - tries to fit relatively smooth lines
+  - useful for sedimentary records, esp for 14C-dated ones
+Oxcal: probablistic models (also bayesian)
+Banded age model: layer counting 
+  - two main errors (double count, or not counted)
+  - errors accumulate as you go back through the core
+  - ice cores, trees, stalagmites, varves
+  
+  
+Note: Bayesian models incorporate known information into an estimate, not just the maximum likelihood
+  
+## Age modelling is critical
+See PaCTS for reporting and archiving standards
+
+## Questions
+RPlum - integrates lead and radiocarbon - ready soon

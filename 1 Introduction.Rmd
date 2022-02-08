@@ -1,0 +1,69 @@
+---
+title: "2 Ensembles"
+output: html_document
+---
+
+# Intro
+
+# LiPD Datasets
+
+-   Streamlining paloedatasets
+-   Linked Paleodata
+-   A data container, with flexibility
+-   Ensemble tables are key to this
+
+![](https://lipd.net/img/schematic_v1_3.png)
+
+## Including metadata
+
+-   dataSetName
+-   orginalDataUrl
+-   investigators
+-   LiPDVersion
+-   Geographic
+-   Publication
+-   Funding
+
+## Chrondata
+
+Measurement tables
+
+And models (e.g. age/depth models) - parameters (e.g. for bacon) - summary table - ensemble tables (very important for geochronR) - distribution table (mainly for radiocarbon)
+
+## Paleodata
+
+Connects to physical objects (generally)
+
+Measurement tables - all the things you measured from the material - plus inferred variables - climate interpretation
+
+## Creating a LiPD
+
+There are tools to do this, you don't need to do it manually!
+
+Using the LiPD Playground: <https://lipd.net/playground>
+
+## Finding LiPD data
+
+<https://lipdverse.org>
+
+Contains common compilations of Holocene climate data e.g. temperature 12k
+
+## Additional questions from audience
+
+Neotoma database and format: <http://www.goring.org/resources/Neotoma_Lesson.html>
+
+Neotoma+LiPD ara interoperable: working on over the next month
+
+Pangea is not yet that compatible
+
+# Roadmap
+
+<http://linked.earth/geochronr-hackathon/schedule>
+
+Can work at different times - groups are sorted by timezones
+
+Three slides - 5 mins max
+
+1.  What we learned/went well
+2.  What was frustrating
+3.  That you'd ike to see in geoChroR or future hackathons
