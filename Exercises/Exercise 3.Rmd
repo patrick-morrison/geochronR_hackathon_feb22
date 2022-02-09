@@ -1,0 +1,65 @@
+---
+title: "Exercise 3"
+output: html_document
+---
+
+Noon pacific time, 2 hours and 15. (4amAWST)
+
+http://linked.earth/time-uncertain-data-analysis-in-R/correlation.html
+
+```{r}
+library(lipdR)
+library(geoChronR)
+library(ggplot2)
+library(magrittr)
+library(egg)
+```
+
+The Hulu cave speleothem and the GISP2 ice core
+```{r}
+hulu <- readLipd("https://lipdverse.org/geoChronR-examples/Hulucave.Wang.2001-ens.lpd")
+gisp <- readLipd("http://lipdverse.org/geoChronR-examples/GISP2.Alley.2000-ens.lpd")
+```
+
+```{r}
+paleo <- extractTs(hulu) %>% ts2tibble()
+paleo$paleoData_variableName
+hulu <- mapAgeEnsembleToPaleoData(hulu,
+                                  age.var = "age",
+                                  model.num = 1,
+                                  paleo.depth.var = "depth", 
+                                  paleo.meas.table.num = 1)
+
+writeLipd(hulu, "data/Hulucave.Wang.2001.lpd")
+
+hulu.ae <- selectData(hulu,var.name = "ageEnsemble",meas.table.num = 1)
+hulu.d18o <- selectData(hulu,var.name = "d18O",meas.table.num = 1)
+
+hulu.plot <- plotTimeseriesEnsRibbons(X = hulu.ae,
+                                      Y = hulu.d18o) + ggtitle('Hulu cave')
+hulu.plot
+```
+
+```{r}
+paleo <- extractTs(gisp) %>% ts2tibble()
+paleo$paleoData_variableName
+gisp <- mapAgeEnsembleToPaleoData(gisp,
+                                  age.var = "ageensemble",
+                                  model.num = 1,
+                                  paleo.depth.var = "year", 
+                                  paleo.meas.table.num = 1)
+
+gisp.ae <- selectData(gisp,var.name = "ageEnsemble",meas.table.num = 1)
+gisp.temp <- selectData(gisp,var.name = "temp",meas.table.num = 1)
+
+writeLipd(gisp, "data/GISP2.Alley.2000.lpd")
+
+gisp.plot <- plotTimeseriesEnsRibbons(X = gisp.ae,
+                                      Y = gisp.temp) + ggtitle('GISP ice core')
+gisp.plot
+```
+
+```{r}
+
+```
+
