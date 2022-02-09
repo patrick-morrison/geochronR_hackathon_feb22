@@ -1,0 +1,44 @@
+---
+title: "4 Linked Earth"
+output: html_document
+---
+
+Linked earth is first and foremost a community of paleoscientists
+What is going on in the next few years and how to be involved
+
+## Data stewardship
+LiPD Playground 
+- editing the record directly in GUI and sending it straight to Python
+LiPDverse - Version controlled versions of information
+- Website redesign
+- Tutorial blogs
+- Query from R/Python directly
+
+GeoChronR
+- A series of short tutorials
+- More features coming from user requests (open issues on Github)
+
+Pyleoclim (A lot of the same functionality minus the age model - can't create but can play with them)
+- Paper
+- Better integration with pandas and xarray
+- Dedicated cloud environment
+- Open development meetings
+
+## Community
+discourse.linked.earth
+Linkedearth youtube channel
+Tutorials in Python and R
+Linkedearth gallery - examples
+Medium blog posts
+Community meetings Monday 9-10am Pacific
+
+### Hackathons
+Pyleoclim beginner (March 10th-11th)
+- Beginner
+- Advanced
+- Bring your own data
+Office hours Biweekly from 9-10am pacific over zoom
+
+## Github
+
+Post issues in the relevant repository

@@ -1,0 +1,156 @@
+---
+title: "Exercise 4"
+output: html_document
+---
+
+Meet back at 3pm pacific (2.3 hours, 7am AWST)
+http://linked.earth/time-uncertain-data-analysis-in-R/pca.html
+
+```{r}
+library(lipdR)
+library(geoChronR)
+library(magrittr)
+library(dplyr)
+library(purrr)
+library(ggplot2)
+```
+
+```{r}
+FD <- lipdR::readLipd("http://lipdverse.org/geoChronR-examples/PalMod-IndianOcean/PalMod-IndianOcean.zip") 
+```
+
+## 6.1 Map the data
+
+```{r}
+mapLipd(FD,map.type = "line",f = 0.1)
+```
+## Age ensembles mapping
+
+```{r}
+FD2 = purrr::map(FD,
+                 mapAgeEnsembleToPaleoData,
+                 strict.search = TRUE,
+                 paleo.depth.var = "depth_merged",
+                 chron.depth.var = "depth",
+                 age.var = "ageEnsemble" )
+```
+
+## Plot summary stats
+```{r}
+indTib <- FD2 %>% extractTs() %>% ts2tibble() #create a lipd-timeseries-tibble
+
+#use purrr to extract the minimum and maximum ages for each record
+minAge <- map_dbl(indTib$age,min,na.rm = TRUE)
+maxAge <- map_dbl(indTib$age,max,na.rm = TRUE)
+
+#plot the distributions of the ages.
+ggplot()+ geom_histogram(aes(x = minAge,fill = "Min age")) + 
+  geom_histogram(aes(x = maxAge,fill = "Max age"),alpha = 0.5) +
+  scale_fill_manual("",values = c("red","black")) +
+  xlab(paste0("Age (", unique(indTib$ageUnits), ")"))
+```
+
+
+```{r}
+indTs <- extractTs(FD2) #create a lipd-timeseries
+
+# create some variables for screening
+startYear <- 10
+endYear <- 30
+
+#write a function to determine if the dataset has enough values within the target time frame
+nGoodVals <- function(x,startYear,endYear){
+  agesWithValues <- x$age[is.finite(x$paleoData_values)]
+  gv <- which(agesWithValues >= startYear & agesWithValues <= endYear)
+  return(length(gv))
+}
+
+#write a function to determine how much coverage the data has within that target frame
+span <- function(x,startYear,endYear){
+  agesWithValues <- x$age[is.finite(x$paleoData_values)]
+  agesWithValues <- agesWithValues[agesWithValues >= startYear & agesWithValues <= endYear]
+  sout <- abs(diff(range(agesWithValues,na.rm = TRUE)))
+  return(sout)
+}
+
+#use purrr to run those functions over each item in the list
+nValsInRange <- map_dbl(indTs,nGoodVals,startYear,endYear)
+span <- map_dbl(indTs,span,startYear,endYear)
+```
+
+```{r}
+#use our indices from above to select only the good timeseries
+TS.filtered <- indTs[nValsInRange > 20 & span > 15] %>% 
+  filterTs("paleoData_variableName == surface.temp") #and then select our variable of interest
+```
+
+```{r}
+#convert the lipd-ts object to a lipd-ts-tibble
+tsTib <- ts2tibble(TS.filtered) 
+
+#convert the lipd-ts-tibble object to a lipd-ts-tibble-long
+tp <- tidyTs(tsTib,age.var = "age") 
+
+#filter it only to our time range
+tp <- tp %>% 
+  filter(between(age,10,30))
+
+#and make a timeseries stack plot
+plotTimeseriesStack(tp,time.var = "age")
+```
+```{r}
+binned.TS <- binTs(TS.filtered,bin.vec = seq(10,30,by=.5),time.var = "ageEnsemble")
+```
+
+## 6.3 Ensemble PCA
+
+```{r}
+pcout <- pcaEns(binned.TS,pca.type = "cov")
+plotScreeEns(pcout)
+```
+
+### 6.3.1 Plot ensemble PCA results
+
+```{r}
+plotPCA <-  plotPcaEns(pcout,
+                       TS = TS.filtered,
+                       map.type = "line",
+                       f=.1,
+                       legend.position = c(0.5,.6),
+                       which.pcs = 1:2,
+                       which.leg = 2)
+```
+
+```{r}
+quantileData <- plotTimeseriesEnsRibbons(X = pcout$age,Y = pcout$PCs[,1,],export.quantiles = TRUE)
+
+print(quantileData)
+```
+```{r}
+#use pullTsVariable to pull a variable out of a lipd-ts object
+sitenames <- pullTsVariable(TS.filtered,"geo_siteName")
+
+#use purrr to weight by 1/n
+weights <- purrr::map_dbl(sitenames,~ 1/sum(.x == sitenames))
+
+names(weights) <- sitenames
+weights
+```
+
+```{r}
+pcoutWeighted <- pcaEns(binned.TS,pca.type = "cov",weights = weights)
+plotScreeEns(pcoutWeighted)
+plotPCA <-  plotPcaEns(pcoutWeighted,
+                       TS = TS.filtered,
+                       map.type = "line",
+                       f=.1,
+                       legend.position = c(0.5,.6),
+                       which.pcs = 1:2,
+                       which.leg = 2)
+```
+```{r}
+tib.filtered <- indTs[nValsInRange > 20 & span > 15] %>% ts2tibble()
+
+table(tib.filtered$paleoData_variableName)
+```
+

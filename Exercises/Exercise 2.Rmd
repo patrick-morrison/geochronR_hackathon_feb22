@@ -146,6 +146,7 @@ tana <- createMultiModelEnsemble(tana,
 
 ```{r}
 plotChronEns(tana,model.num = 4) %>% plotModelDistributions(tana,add.to.plot=.)
+plotChronEns(tana,model.num = 4) %>% plotModelDistributions(tana,model.num = 1)
 ```
 ### 4.3.3
 ```{r}
@@ -240,30 +241,30 @@ ggarrange(plots = list(tana.ribbon.plot +
 ## 4.5 Chapter Project
 
 ```{r}
-tana <- mapAgeEnsembleToPaleoData(tana,
+tana2 <- mapAgeEnsembleToPaleoData(tana,
                                   age.var = "ageensemble",
                                   model.num = 1,
                                   paleo.depth.var = "ddwax corrected", 
                                   paleo.meas.table.num = 3)
-tana.ye <- selectData(tana,var.name = "ageensemble",meas.table.num = 3)
+tana.ye <- selectData(tana2,var.name = "ageensemble",meas.table.num = 3)
 tana.ae.bac <- convertAD2BP(tana.ye)
 
-tana.lw.bac <- selectData(tana,var.name = "dDwax Corrected",meas.table.num = 3)
+tana.lw.bac <- selectData(tana2,var.name = "dDwax Corrected",meas.table.num = 3)
 
 tana.ribbon.plot.bac <- plotTimeseriesEnsRibbons(X = tana.ae.bac,Y = tana.lw.bac)+
   xlim(c(10000,0)) + ggtitle("Bacon")
 tana.ribbon.plot.bac
 ```
 ```{r}
-tana <- mapAgeEnsembleToPaleoData(tana,
+tana2 <- mapAgeEnsembleToPaleoData(tana,
                                   age.var = "ageensemble",
                                   model.num = 2,
                                   paleo.depth.var = "ddwax corrected", 
                                   paleo.meas.table.num = 3)
-tana.ye <- selectData(tana,var.name = "ageensemble",meas.table.num = 3)
+tana.ye <- selectData(tana2,var.name = "ageensemble",meas.table.num = 3)
 tana.ae.bcr <- convertAD2BP(tana.ye)
 
-tana.lw.bcr <- selectData(tana,var.name = "dDwax Corrected",meas.table.num = 3)
+tana.lw.bcr <- selectData(tana2,var.name = "dDwax Corrected",meas.table.num = 3)
 
 tana.ribbon.plot.bcr <- plotTimeseriesEnsRibbons(X = tana.ae.bcr,Y = tana.lw.bcr) +
   xlim(c(10000,0)) + ggtitle("BChron")
@@ -271,22 +272,24 @@ tana.ribbon.plot.bcr
 ```
 
 ```{r}
-tana <- mapAgeEnsembleToPaleoData(tana,
+tana2 <- mapAgeEnsembleToPaleoData(tana,
                                   age.var = "ageensemble",
                                   model.num = 3,
                                   paleo.depth.var = "ddwax corrected", 
                                   paleo.meas.table.num = 3)
-tana.ye <- selectData(tana,var.name = "ageensemble",meas.table.num = 3)
+tana.ye <- selectData(tana2,var.name = "ageensemble",meas.table.num = 3)
 tana.ae.ox <- convertAD2BP(tana.ye)
 
-tana.lw.ox <- selectData(tana,var.name = "dDwax Corrected",meas.table.num = 3)
+tana.lw.ox <- selectData(tana2,var.name = "dDwax Corrected",meas.table.num = 3)
 
 tana.ribbon.plot.ox <- plotTimeseriesEnsRibbons(X = tana.ae.ox,Y = tana.lw.ox) +
   xlim(c(-10000,0)) + ggtitle('OxCal')
 tana.ribbon.plot.ox
 ```
+
 ```{r}
-tana <- mapAgeEnsembleToPaleoData(tana,age.var = "ageensemble",
+tana <- mapAgeEnsembleToPaleoData(tana,
+                                  age.var = "yearEnsemble",
                                   model.num = 5,
                                   paleo.depth.var = "ddwax corrected", 
                                   paleo.meas.table.num = 3)
@@ -296,7 +299,7 @@ tana.ae.bam <- convertAD2BP(tana.ye)
 tana.lw.bam <- selectData(tana,var.name = "dDwax Corrected",meas.table.num = 3)
 
 tana.ribbon.plot.bam <- plotTimeseriesEnsRibbons(X = tana.ae.bam,Y = tana.lw.bam) +
-  xlim(c(10000,0)) + ggtitle('BAM')
+  xlim(c(-10000,0)) + ggtitle('OxCal')
 tana.ribbon.plot.bam
 ```
 
