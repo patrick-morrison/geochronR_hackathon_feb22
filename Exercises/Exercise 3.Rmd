@@ -19,6 +19,7 @@ The Hulu cave speleothem and the GISP2 ice core
 ```{r}
 hulu <- readLipd("https://lipdverse.org/geoChronR-examples/Hulucave.Wang.2001-ens.lpd")
 gisp <- readLipd("http://lipdverse.org/geoChronR-examples/GISP2.Alley.2000-ens.lpd")
+gisp$paleoData[[1]]$measurementTable[[1]]$year <- NULL
 ```
 
 ```{r}
@@ -46,7 +47,7 @@ paleo$paleoData_variableName
 gisp <- mapAgeEnsembleToPaleoData(gisp,
                                   age.var = "ageensemble",
                                   model.num = 1,
-                                  paleo.depth.var = "year", 
+                                  paleo.depth.var = "age", 
                                   paleo.meas.table.num = 1)
 
 gisp.ae <- selectData(gisp,var.name = "ageEnsemble",meas.table.num = 1)
@@ -58,8 +59,121 @@ gisp.plot <- plotTimeseriesEnsRibbons(X = gisp.ae,
                                       Y = gisp.temp) + ggtitle('GISP ice core')
 gisp.plot
 ```
-
+They seem to be positively correlated.
 ```{r}
-
+library(patchwork)
+(hulu.plot + xlim(c(50000,35000))) / 
+  (gisp.plot + xlim(c(50000,35000)))
 ```
 
+## 5.3 To corEns() function
+
+```{r}
+corout <- corEns(time.1 = gisp.ae,
+                 values.1 = gisp.temp,
+                 time.2 = hulu.ae,
+                 values.2 = hulu.d18o,
+                 bin.step = 200,
+                 max.ens = 1000,
+                 isopersistent  = TRUE,
+                 isospectral = TRUE,
+                 gaussianize = TRUE)
+corout$cor.stats
+```
+
+## 5.4 Plotting correlation results
+```{r}
+raw <- plotCorEns(corout,
+           significance.option = "raw",
+           use.fdr = FALSE,
+           bar.colors = c("grey50", "#E1A81C", "#1B54A8"),
+           legend.position = c(0.1, 0.65),
+           f.sig.lab.position = c(0.15, 0.61))+
+  ggtitle("Distribution of correlation coefficients")
+
+print(raw)
+```
+
+Isopersistent is the most similar. eff_n shows the biggest reduction.
+```{r fig.height=10}
+eff_n <- plotCorEns(corout,
+           significance.option = "eff_n",
+           use.fdr = FALSE,
+           bar.colors = c("grey50", "#E1A81C", "#1B54A8"),
+           legend.position = c(0.1, 0.65),
+           f.sig.lab.position = c(0.15, 0.61))+
+  ggtitle("eff_n")
+
+isopersistent <- plotCorEns(corout,
+           significance.option = "isopersistent",
+           use.fdr = FALSE,
+           bar.colors = c("grey50", "#E1A81C", "#1B54A8"),
+           legend.position = c(0.1, 0.65),
+           f.sig.lab.position = c(0.15, 0.61))+
+  ggtitle("isopersistent")
+
+isospectral <- plotCorEns(corout,
+           significance.option = "isospectral",
+           use.fdr = FALSE,
+           bar.colors = c("grey50", "#E1A81C", "#1B54A8"),
+           legend.position = c(0.1, 0.65),
+           f.sig.lab.position = c(0.15, 0.61))+
+  ggtitle("isospectral")
+
+
+raw / eff_n / isopersistent/ isospectral
+```
+
+### 5.4.2 False-discovery rate testing
+
+```{r}
+isoPersistentFdr <- plotCorEns(corout,
+           legend.position =c(.85,.8),
+           f.sig.lab.position = c(.85,.6),
+           significance.option = "isopersistent",
+           use.fdr = TRUE)+ggtitle("Isopersistent significance testing with FDR")
+
+print(isoPersistentFdr)
+```
+## 5.5 Juding signfificance of correlation
+
+GISP has a higher level of self-correlation.
+
+```{r}
+corhulu <- corEns(time.1 = hulu.ae,
+                 values.1 = hulu.d18o,
+                 time.2 = hulu.ae,
+                 values.2 = hulu.d18o,
+                 bin.step = 200,
+                 max.ens = 1000,
+                 isopersistent  = TRUE,
+                 isospectral = TRUE,
+                 gaussianize = TRUE)
+
+isoPersistentFdr_hulu <- plotCorEns(corhulu,
+           legend.position =c(.85,.8),
+           f.sig.lab.position = c(.85,.6),
+           significance.option = "isospectral",
+           use.fdr = TRUE)+ ggtitle("Hulu cave isospectral significance testing with FDR")
+
+corgisp <- corEns(time.1 = gisp.ae,
+                 values.1 = gisp.temp,
+                 time.2 = gisp.ae,
+                 values.2 = gisp.temp,
+                 bin.step = 200,
+                 max.ens = 1000,
+                 isopersistent  = TRUE,
+                 isospectral = TRUE,
+                 gaussianize = TRUE)
+
+isoPersistentFdr_gisp <- plotCorEns(corgisp,
+           legend.position =c(.85,.8),
+           f.sig.lab.position = c(.85,.6),
+           significance.option = "isospectral",
+           use.fdr = TRUE)+ggtitle("GISP core isospectral significance testing with FDR")
+isoPersistentFdr_hulu / isoPersistentFdr_gisp
+```
+
+## 5.6 Chapter Project
+
+Todo

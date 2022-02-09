@@ -1,5 +1,5 @@
 # Feedback
 
-## Exercise 1
-In: http://linked.earth/time-uncertain-data-analysis-in-R/data.html
-plotLipd() should be plotSummary()
+Bugs:
+New line being added when reading LiPD from file
+Crashing when fitting mapAgeEnsembleToPaleoData to GISP2 in 5.1
